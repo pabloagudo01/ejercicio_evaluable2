@@ -7,14 +7,21 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <netdb.h>
-#include <sys/uio.h>
+#include <stdint.h>
 
-// Función auxiliar para conectarse al servidor
+//#define DEBUG 0  // Descomentar para depuración
+
+#ifdef DEBUG
+#define log(...) printf(__VA_ARGS__)
+#else
+#define log(...)
+#endif
+
 static int conectar_servidor() {
     char *ip = getenv("IP_TUPLAS");
     char *port_str = getenv("PORT_TUPLAS");
     if (!ip || !port_str) {
-        fprintf(stderr, "Error: Variables IP_TUPLAS o PORT_TUPLAS no definidas\n");
+        log("Error: Variables IP_TUPLAS o PORT_TUPLAS no definidas\n");
         return -1;
     }
 
@@ -34,7 +41,7 @@ static int conectar_servidor() {
         return -1;
     }
 
-    if (connect(sock, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+    if (connect(sock, (struct sockaddr*)&addr, sizeof(addr))) {
         perror("Error de conexión");
         close(sock);
         return -1;
@@ -43,7 +50,7 @@ static int conectar_servidor() {
     return sock;
 }
 
-// ----------------- Implementación completa de la API -----------------
+// ---------------------- Serialización y envío de datos ----------------------
 int destroy() {
     int sock = conectar_servidor();
     if (sock == -1) return -2;
@@ -70,6 +77,7 @@ int set_value(int key, char *value1, int N_value2, double *V_value2, struct Coor
     int sock = conectar_servidor();
     if (sock == -1) return -2;
 
+    // Serializar datos en buffer
     uint8_t opcode = 1;
     uint32_t key_net = htonl(key);
     uint8_t len = strlen(value1);
@@ -77,18 +85,18 @@ int set_value(int key, char *value1, int N_value2, double *V_value2, struct Coor
     uint32_t x_net = htonl(value3.x);
     uint32_t y_net = htonl(value3.y);
 
-    struct iovec iov[8] = {
-        {&opcode, 1},
-        {&key_net, 4},
-        {&len, 1},
-        {value1, len},
-        {&N_net, 1},
-        {V_value2, N_value2 * sizeof(double)},
-        {&x_net, 4},
-        {&y_net, 4}
-    };
+    char buffer[1024];
+    size_t offset = 0;
+    memcpy(buffer + offset, &opcode, 1); offset += 1;
+    memcpy(buffer + offset, &key_net, 4); offset += 4;
+    memcpy(buffer + offset, &len, 1); offset += 1;
+    memcpy(buffer + offset, value1, len); offset += len;
+    memcpy(buffer + offset, &N_net, 1); offset += 1;
+    memcpy(buffer + offset, V_value2, N_value2 * sizeof(double)); offset += N_value2 * sizeof(double);
+    memcpy(buffer + offset, &x_net, 4); offset += 4;
+    memcpy(buffer + offset, &y_net, 4); offset += 4;
 
-    if (writev(sock, iov, 8) == -1) {
+    if (send(sock, buffer, offset, 0) != (ssize_t)offset) {
         close(sock);
         return -2;
     }
@@ -107,14 +115,19 @@ int get_value(int key, char *value1, int *N_value2, double *V_value2, struct Coo
     int sock = conectar_servidor();
     if (sock == -1) return -2;
 
+    // Serializar solicitud
     uint8_t opcode = 2;
     uint32_t key_net = htonl(key);
+    char buffer[5];
+    memcpy(buffer, &opcode, 1);
+    memcpy(buffer + 1, &key_net, 4);
 
-    if (send(sock, &opcode, 1, 0) != 1 || send(sock, &key_net, 4, 0) != 4) {
+    if (send(sock, buffer, 5, 0) != 5) {
         close(sock);
         return -2;
     }
 
+    // Recibir respuesta
     int32_t respuesta;
     if (recv(sock, &respuesta, 4, 0) != 4) {
         close(sock);
@@ -236,3 +249,4 @@ int exist(int key) {
     close(sock);
     return ntohl(respuesta);
 }
+	
