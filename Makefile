@@ -22,7 +22,7 @@ $(SERVER_EXEC): $(SERVER_OBJ) $(KEYS_OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 $(CLIENT_EXEC): $(CLIENT_OBJ) $(LIB_NAME)
-	$(CC) -o $@ $(CLIENT_OBJ) -L. -lclaves
+	$(CC) -o $@ $< -L. -lclaves -Wl,-rpath=.
 
 %.o: %.c claves.h
 	$(CC) $(CFLAGS) -c $< -o $@
