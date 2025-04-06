@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -pedantic -fPIC
 LDFLAGS = -lpthread
-CLIENT_SRC = app-cliente.c app-cliente-2.c
+CLIENT_SRC = app-cliente.c
 SERVER_SRC = servidor-sock.c
 PROXY_SRC = proxy-sock.c
 KEYS_SRC = claves.c
@@ -9,10 +9,12 @@ CLIENT_OBJ = $(CLIENT_SRC:.c=.o)
 SERVER_OBJ = $(SERVER_SRC:.c=.o)
 PROXY_OBJ = $(PROXY_SRC:.c=.o)
 KEYS_OBJ = $(KEYS_SRC:.c=.o)
+CLIENT2_SRC = app-cliente-2.c
+CLIENT2_OBJ = $(CLIENT2_SRC:.c=.o)
+CLIENT2_EXEC = cliente2
 LIB_NAME = libclaves.so
 SERVER_EXEC = servidor
 CLIENT_EXEC = cliente
-CLIENT_EXEC2 = cliente2
 
 all: $(SERVER_EXEC) $(CLIENT_EXEC)
 
@@ -22,15 +24,17 @@ $(LIB_NAME): $(PROXY_OBJ)
 $(SERVER_EXEC): $(SERVER_OBJ) $(KEYS_OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-$(CLIENT_EXEC): app-cliente.o $(LIB_NAME)
+$(CLIENT_EXEC): $(CLIENT_OBJ) $(LIB_NAME)
 	$(CC) -o $@ $< -L. -lclaves -Wl,-rpath=.
 
-$(CLIENT_EXEC2): app-cliente-2.o $(LIB_NAME)
+$(CLIENT2_EXEC): $(CLIENT2_OBJ) $(LIB_NAME)
 	$(CC) -o $@ $< -L. -lclaves -Wl,-rpath=.
+
+
 %.o: %.c claves.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(SERVER_EXEC) $(CLIENT_EXEC) $(LIB_NAME) *.o
+	rm -f $(SERVER_EXEC) $(CLIENT_EXEC) $(CLIENT2_EXEC) $(LIB_NAME) *.o
 
 .PHONY: all clean
