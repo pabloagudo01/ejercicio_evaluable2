@@ -12,11 +12,14 @@ KEYS_OBJ = $(KEYS_SRC:.c=.o)
 CLIENT2_SRC = app-cliente-2.c
 CLIENT2_OBJ = $(CLIENT2_SRC:.c=.o)
 CLIENT2_EXEC = cliente2
+CLIENT1_SRC = app-cliente-1.c
+CLIENT1_OBJ = $(CLIENT1_SRC:.c=.o)
+CLIENT1_EXEC = cliente1
 LIB_NAME = libclaves.so
 SERVER_EXEC = servidor
 CLIENT_EXEC = cliente
 
-all: $(SERVER_EXEC) $(CLIENT_EXEC)	$(CLIENT2_EXEC)
+all: $(SERVER_EXEC) $(CLIENT_EXEC)	$(CLIENT2_EXEC) $(CLIENT1_EXEC)
 
 $(LIB_NAME): $(PROXY_OBJ)
 	$(CC) -shared -o $@ $^ $(LDFLAGS)
@@ -30,11 +33,14 @@ $(CLIENT_EXEC): $(CLIENT_OBJ) $(LIB_NAME)
 $(CLIENT2_EXEC): $(CLIENT2_OBJ) $(LIB_NAME)
 	$(CC) -o $@ $< -L. -lclaves -Wl,-rpath=.
 
+$(CLIENT1_EXEC): $(CLIENT1_OBJ) $(LIB_NAME)
+	$(CC) -o $@ $< -L. -lclaves -Wl,-rpath=.
+
 
 %.o: %.c claves.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(SERVER_EXEC) $(CLIENT_EXEC) $(CLIENT2_EXEC) $(LIB_NAME) *.o
+	rm -f $(SERVER_EXEC) $(CLIENT_EXEC) $(CLIENT2_EXEC) $(CLIENT1_EXEC) $(LIB_NAME) *.o
 
 .PHONY: all clean
