@@ -10,19 +10,11 @@
 #include <stdint.h>
 #include <sys/uio.h>
 
-//#define DEBUG 0  // Descomentar para depuración
-
-#ifdef DEBUG
-#define log(...) printf(__VA_ARGS__)
-#else
-#define log(...)
-#endif
-
 static int conectar_servidor() {
     char *ip = getenv("IP_TUPLAS");
     char *port_str = getenv("PORT_TUPLAS");
     if (!ip || !port_str) {
-        log("Error: Variables IP_TUPLAS o PORT_TUPLAS no definidas\n");
+        printf("[PID %d] Error: Variables IP_TUPLAS o PORT_TUPLAS no definidas\n", getpid());
         return -1;
     }
 
@@ -54,7 +46,7 @@ static int conectar_servidor() {
 // ---------------------- Serialización y envío de datos ----------------------
 
 int destroy() {
-    log("[PID %d] destroy llamada\n", getpid());
+    printf("[PID %d] destroy llamada\n", getpid());
 
     int sock = conectar_servidor();
     if (sock == -1) return -2;
@@ -72,12 +64,12 @@ int destroy() {
     }
 
     close(sock);
-    log("[PID %d] destroy terminada con respuesta: %d\n", getpid(), ntohl(respuesta));
+    printf("[PID %d] destroy terminada con respuesta: %d\n", getpid(), ntohl(respuesta));
     return ntohl(respuesta);
 }
 
 int set_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3) {
-    log("[PID %d] set_value llamada con clave %d\n", getpid(), key);
+    printf("[PID %d] set_value llamada con clave %d\n", getpid(), key);
 
     if (strlen(value1) > 255 || N_value2 < 1 || N_value2 > 32) return -1;
 
@@ -92,7 +84,7 @@ int set_value(int key, char *value1, int N_value2, double *V_value2, struct Coor
     uint32_t x_net = htonl(value3.x);
     uint32_t y_net = htonl(value3.y);
 
-    log("[PID %d] Enviando datos: key=%d, value1=%s, N_value2=%d\n", getpid(), key, value1, N_value2);
+    printf("[PID %d] Enviando datos: key=%d, value1=%s, N_value2=%d\n", getpid(), key, value1, N_value2);
 
     char buffer[1024];
     size_t offset = 0;
@@ -117,12 +109,12 @@ int set_value(int key, char *value1, int N_value2, double *V_value2, struct Coor
     }
 
     close(sock);
-    log("[PID %d] set_value terminada con respuesta: %d\n", getpid(), ntohl(respuesta));
+    printf("[PID %d] set_value terminada con respuesta: %d\n", getpid(), ntohl(respuesta));
     return ntohl(respuesta);
 }
 
 int get_value(int key, char *value1, int *N_value2, double *V_value2, struct Coord *value3) {
-    log("[PID %d] get_value llamada con clave %d\n", getpid(), key);
+    printf("[PID %d] get_value llamada con clave %d\n", getpid(), key);
 
     int sock = conectar_servidor();
     if (sock == -1) return -2;
@@ -134,7 +126,7 @@ int get_value(int key, char *value1, int *N_value2, double *V_value2, struct Coo
     memcpy(buffer, &opcode, 1);
     memcpy(buffer + 1, &key_net, 4);
 
-    log("[PID %d] Enviando solicitud para obtener valor de clave %d\n", getpid(), key);
+    printf("[PID %d] Enviando solicitud para obtener valor de clave %d\n", getpid(), key);
 
     if (send(sock, buffer, 5, 0) != 5) {
         close(sock);
@@ -178,12 +170,12 @@ int get_value(int key, char *value1, int *N_value2, double *V_value2, struct Coo
     value3->y = ntohl(y_net);
 
     close(sock);
-    log("[PID %d] get_value terminada para clave %d\n", getpid(), key);
+    printf("[PID %d] get_value terminada para clave %d\n", getpid(), key);
     return 0;
 }
 
 int modify_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3) {
-    log("[PID %d] modify_value llamada con clave %d\n", getpid(), key);
+    printf("[PID %d] modify_value llamada con clave %d\n", getpid(), key);
 
     if (strlen(value1) > 255 || N_value2 < 1 || N_value2 > 32) return -1;
 
@@ -208,7 +200,7 @@ int modify_value(int key, char *value1, int N_value2, double *V_value2, struct C
         {&y_net, 4}
     };
 
-    log("[PID %d] Enviando datos modificados para la clave %d\n", getpid(), key);
+    printf("[PID %d] Enviando datos modificados para la clave %d\n", getpid(), key);
 
     if (writev(sock, iov, 8) == -1) {
         close(sock);
@@ -222,12 +214,12 @@ int modify_value(int key, char *value1, int N_value2, double *V_value2, struct C
     }
 
     close(sock);
-    log("[PID %d] modify_value terminada con respuesta: %d\n", getpid(), ntohl(respuesta));
+    printf("[PID %d] modify_value terminada con respuesta: %d\n", getpid(), ntohl(respuesta));
     return ntohl(respuesta);
 }
 
 int delete_key(int key) {
-    log("[PID %d] delete_key llamada con clave %d\n", getpid(), key);
+    printf("[PID %d] delete_key llamada con clave %d\n", getpid(), key);
 
     int sock = conectar_servidor();
     if (sock == -1) return -2;
@@ -247,6 +239,8 @@ int delete_key(int key) {
     }
 
     close(sock);
-    log("[PID %d] delete_key terminada con respuesta: %d\n", getpid(), ntohl(respuesta));
+    printf("[PID %d] delete_key terminada con respuesta: %d\n", getpid(), ntohl(respuesta));
     return ntohl(respuesta);
 }
+
+	

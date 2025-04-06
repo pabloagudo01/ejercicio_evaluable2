@@ -16,7 +16,7 @@ LIB_NAME = libclaves.so
 SERVER_EXEC = servidor
 CLIENT_EXEC = cliente
 
-all: $(SERVER_EXEC) $(CLIENT_EXEC)	$(CLIENT2_EXEC)
+all: $(SERVER_EXEC) $(CLIENT_EXEC)
 
 $(LIB_NAME): $(PROXY_OBJ)
 	$(CC) -shared -o $@ $^ $(LDFLAGS)
