@@ -4,66 +4,63 @@
 #include "claves.h"
 
 int main() {
-    if (init() < 0) {
-        printf("Error al iniciar la conexión con el servidor\n");
-        return -1;
-    }
-
-    char key[] = "clave1";
+    int key = 101;
     char value1[256] = "valor original";
-    int value2 = 10;
-    double value3 = 3.14;
+    double V_value2[3] = {1.23, 4.56, 7.89};
+    int N_value2 = 3;
+    struct Coord value3 = {5, 10};
+
+    printf("Cl2: Iniciando cliente...\n");
 
     // Insertar clave
-    if (set_value(key, value1, value2, value3) == 0) {
-        printf("Clave '%s' insertada correctamente.\n", key);
+    if (set_value(key, value1, N_value2, V_value2, value3) == 0) {
+        printf("Cl2: Clave '%d' insertada correctamente.\n", key);
     } else {
-        printf("Error al insertar clave '%s'.\n", key);
+        printf("Cl2: Error al insertar clave '%d'.\n", key);
     }
 
     // Modificar clave
-    strcpy(value1, "valor modificado");
-    value2 = 99;
-    value3 = 42.42;
+    char new_value1[256] = "valor modificado";
+    double new_V_value2[2] = {9.9, 8.8};
+    int new_N_value2 = 2;
+    struct Coord new_value3 = {20, 30};
 
-    if (modify_value(key, value1, value2, value3) == 0) {
-        printf("Clave '%s' modificada correctamente.\n", key);
+    if (modify_value(key, new_value1, new_N_value2, new_V_value2, new_value3) == 0) {
+        printf("Cl2: Clave '%d' modificada correctamente.\n", key);
     } else {
-        printf("Error al modificar clave '%s'.\n", key);
+        printf("Cl2: Error al modificar clave '%d'.\n", key);
     }
 
-    // Obtener valor de la clave
+    // Obtener valor
     char recv_value1[256];
-    int recv_value2;
-    double recv_value3;
+    double recv_V_value2[32];
+    int recv_N_value2;
+    struct Coord recv_value3;
 
-    if (get_value(key, recv_value1, &recv_value2, &recv_value3) == 0) {
-        printf("Valores obtenidos de '%s': %s, %d, %.2f\n", key, recv_value1, recv_value2, recv_value3);
+    if (get_value(key, recv_value1, &recv_N_value2, recv_V_value2, &recv_value3) == 0) {
+        printf("Cl2: Valores obtenidos de '%d': %s, [%d valores], (%d, %d)\n", key,
+               recv_value1, recv_N_value2, recv_value3.x, recv_value3.y);
     } else {
-        printf("Error al obtener valores de la clave '%s'.\n", key);
+        printf("Cl2: Error al obtener valores de la clave '%d'.\n", key);
     }
 
     // Eliminar clave
     if (delete_key(key) == 0) {
-        printf("Clave '%s' eliminada correctamente.\n", key);
+        printf("Cl2: Clave '%d' eliminada correctamente.\n", key);
     } else {
-        printf("Error al eliminar clave '%s'.\n", key);
+        printf("Cl2: Error al eliminar clave '%d'.\n", key);
     }
 
     // Verificar existencia
     int existe = exist(key);
     if (existe == 1) {
-        printf("La clave '%s' aún existe.\n", key);
+        printf("Cl2: La clave '%d' aún existe.\n", key);
     } else if (existe == 0) {
-        printf("La clave '%s' no existe (correcto).\n", key);
+        printf("Cl2: La clave '%d' no existe (correcto).\n", key);
     } else {
-        printf("Error al verificar existencia de la clave '%s'.\n", key);
+        printf("Cl2: Error al verificar existencia de la clave '%d'.\n", key);
     }
 
-    if (destroy() < 0) {
-        printf("Error al cerrar la conexión con el servidor\n");
-        return -1;
-    }
-
+    printf("Cl2: Cliente finalizado correctamente.\n");
     return 0;
 }
