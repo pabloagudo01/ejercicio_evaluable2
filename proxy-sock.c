@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <netdb.h>
 #include <stdint.h>
+#include <sys/uio.h>
+
 
 //#define DEBUG 0  // Descomentar para depuración
 
